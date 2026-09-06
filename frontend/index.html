@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DebateMate AI</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    color: #fff;
+    background:
+        radial-gradient(circle at top left, #312e81 0%, transparent 35%),
+        radial-gradient(circle at bottom right, #581c87 0%, transparent 35%),
+        #080b18;
+    padding: 25px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+header {
+    text-align: center;
+    padding: 30px 10px 25px;
+}
+
+.logo {
+    font-size: 50px;
+    margin-bottom: 8px;
+}
+
+h1 {
+    font-size: 46px;
+    background: linear-gradient(90deg, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    color: transparent;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    color: #cbd5e1;
+    font-size: 17px;
+}
+
+.badge {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 7px 15px;
+    border-radius: 30px;
+    background: rgba(129, 140, 248, 0.15);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+    color: #c4b5fd;
+    font-size: 13px;
+}
+
+.card {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 25px;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.section-title {
+    font-size: 25px;
+    margin-bottom: 8px;
+}
+
+.section-description {
+    color: #94a3b8;
+    margin-bottom: 22px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 9px;
+}
+
+textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: vertical;
+    min-height: 110px;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 16px;
+    background: rgba(255,255,255,0.95);
+    color: #111827;
+    margin-bottom: 18px;
+}
+
+button {
+    width: 100%;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    transition: 0.25s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(99,102,241,0.35);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 25px;
+    color: #c4b5fd;
+}
+
+.spinner {
+    width: 35px;
+    height: 35px;
+    border: 4px solid rgba(255,255,255,0.15);
+    border-top: 4px solid #8b5cf6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error {
+    display: none;
+    margin-top: 15px;
+    padding: 14px;
+    border-radius: 12px;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5;
+}
+
+.generated {
+    display: none;
+}
+
+.topic-display {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.topic-display span {
+    color: #a78bfa;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+}
+
+.debate-box {
+    padding: 22px;
+    border-radius: 18px;
+    background: rgba(255,255,255,0.055);
+    border: 1px solid rgba(255,255,255,0.09);
+}
+
+.debate-box h3 {
+    margin-bottom: 15px;
+    font-size: 19px;
+}
+
+.for-box {
+    border-top: 3px solid #22c55e;
+}
+
+.against-box {
+    border-top: 3px solid #ef4444;
+}
+
+.counter-box {
+    border-top: 3px solid #f59e0b;
+}
+
+.rebuttal-box {
+    border-top: 3px solid #38bdf8;
+}
+
+.key-box {
+    border-top: 3px solid #a78bfa;
+}
+
+.statement-box {
+    border-top: 3px solid #ec4899;
+}
+
+.debate-box ul {
+    padding-left: 22px;
+}
+
+.debate-box li {
+    margin-bottom: 10px;
+    color: #dbeafe;
+    line-height: 1.5;
+}
+
+.statement {
+    color: #dbeafe;
+    line-height: 1.7;
+}
+
+.practice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* TIMER */
+
+.timer-box {
+    margin: 5px 0 20px;
+    padding: 20px;
+    border-radius: 18px;
+    text-align: center;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.timer-label {
+    color: #cbd5e1;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+#timer {
+    font-size: 42px;
+    font-weight: bold;
+    color: #a78bfa;
+    letter-spacing: 2px;
+    margin-bottom: 14px;
+}
+
+.timer-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.timer-buttons button {
+    margin: 0;
+}
+
+.reset-btn {
+    background: rgba(255,255,255,0.1);
+}
+
+/* SCORES */
+
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.score-card {
+    text-align: center;
+    padding: 18px 10px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+}
+
+.score-number {
+    font-size: 29px;
+    font-weight: bold;
+    margin-top: 7px;
+    color: #a78bfa;
+}
+
+.feedback {
+    margin-top: 18px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.06);
+    line-height: 1.6;
+}
+
+footer {
+    text-align: center;
+    color: #64748b;
+    padding: 20px;
+    font-size: 13px;
+}
+
+@media(max-width: 750px) {
+
+    body {
+        padding: 12px;
+    }
+
+    h1 {
+        font-size: 35px;
+    }
+
+    .grid,
+    .practice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .score-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .timer-buttons {
+        flex-direction: column;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+    <div class="logo">⚔️</div>
+
+    <h1>DebateMate AI</h1>
+
+    <p class="subtitle">
+        Think. Challenge. Rebut. Win.
+    </p>
+
+    <div class="badge">
+        🤖 AI-Powered Debate Preparation & Evaluation
+    </div>
+
+</header>
+
+
+<!-- AI GENERATOR -->
+
+<div class="card">
+
+    <h2 class="section-title">
+        🧠 AI Debate Generator
+    </h2>
+
+    <p class="section-description">
+        Enter a topic and let DebateMate AI prepare both sides of the debate.
+    </p>
+
+    <label for="topic">
+        🎯 Debate Topic
+    </label>
+
+    <textarea
+        id="topic"
+        placeholder="Example: Should Artificial Intelligence replace human teachers?"
+    ></textarea>
+
+    <button id="generateBtn" onclick="generateDebate()">
+        ⚡ Generate Complete Debate Kit
+    </button>
+
+    <div class="loading" id="loading">
+
+        <div class="spinner"></div>
+
+        <p>
+            DebateMate AI is thinking...
+        </p>
+
+    </div>
+
+    <div class="error" id="generateError"></div>
+
+</div>
+
+
+<!-- GENERATED RESULT -->
+
+<div class="card generated" id="generated">
+
+    <div class="topic-display">
+
+        <h2>
+            🎯 Debate Preparation Kit
+        </h2>
+
+        <p>
+            Topic:
+            <span id="displayTopic"></span>
+        </p>
+
+    </div>
+
+
+    <div class="grid">
+
+        <div class="debate-box for-box">
+
+            <h3>
+                🟢 FOR ARGUMENTS
+            </h3>
+
+            <ul id="forArguments"></ul>
+
+        </div>
+
+
+        <div class="debate-box against-box">
+
+            <h3>
+                🔴 AGAINST ARGUMENTS
+            </h3>
+
+            <ul id="againstArguments"></ul>
+
+        </div>
+
+
+        <div class="debate-box counter-box">
+
+            <h3>
+                ⚔️ COUNTERARGUMENTS
+            </h3>
+
+            <ul id="counterArguments"></ul>
+
+        </div>
+
+
+        <div class="debate-box rebuttal-box">
+
+            <h3>
+                🛡️ REBUTTALS
+            </h3>
+
+            <ul id="rebuttals"></ul>
+
+        </div>
+
+
+        <div class="debate-box key-box">
+
+            <h3>
+                💡 KEY POINTS
+            </h3>
+
+            <ul id="keyPoints"></ul>
+
+        </div>
+
+
+        <div class="debate-box statement-box">
+
+            <h3>
+                🎤 OPENING STATEMENT
+            </h3>
+
+            <p class="statement" id="opening"></p>
+
+        </div>
+
+
+        <div class="debate-box statement-box">
+
+            <h3>
+                🏁 CLOSING STATEMENT
+            </h3>
+
+            <p class="statement" id="closing"></p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- PRACTICE -->
+
+<div class="card">
+
+    <h2 class="section-title">
+        🎤 Practice & Evaluate
+    </h2>
+
+    <p class="section-description">
+        Test your own argument and receive a performance score.
+    </p>
+
+
+    <div class="practice-grid">
+
+        <div>
+
+            <label for="practiceTopic">
+                🎯 Debate Topic
+            </label>
+
+            <textarea
+                id="practiceTopic"
+                placeholder="Enter the debate topic..."
+            ></textarea>
+
+        </div>
+
+
+        <div>
+
+            <label for="argument">
+                💬 Your Argument
+            </label>
+
+            <textarea
+                id="argument"
+                placeholder="Write your argument here..."
+            ></textarea>
+
+        </div>
+
+    </div>
+
+
+    <!-- TIMER -->
+
+    <div class="timer-box">
+
+        <div class="timer-label">
+            ⏱️ Debate Practice Timer
+        </div>
+
+        <div id="timer">
+            01:00
+        </div>
+
+        <div class="timer-buttons">
+
+            <button
+                type="button"
+                onclick="startTimer()"
+                id="startTimerBtn"
+            >
+                ▶️ Start
+            </button>
+
+            <button
+                type="button"
+                onclick="resetTimer()"
+                class="reset-btn"
+            >
+                🔄 Reset
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <button
+        id="evaluateBtn"
+        onclick="evaluateArgument()"
+    >
+        📊 Evaluate My Argument
+    </button>
+
+
+    <div class="error" id="evaluateError"></div>
+
+
+    <!-- EVALUATION RESULT -->
+
+    <div id="evaluationResult" style="display:none;">
+
+        <div class="score-grid">
+
+            <div class="score-card">
+
+                <div>
+                    🎯 Relevance
+                </div>
+
+                <div
+                    class="score-number"
+                    id="relevance"
+                >
+                    0%
+                </div>
+
+            </div>
+
+
+            <div class="score-card">
+
+                <div>
+                    💡 Clarity
+                </div>
+
+                <div
+                    class="score-number"
+                    id="clarity"
+                >
+                    0%
+                </div>
+
+            </div>
+
+
+            <div class="score-card">
+
+                <div>
+                    🧠 Reasoning
+                </div>
+
+                <div
+                    class="score-number"
+                    id="reasoning"
+                >
+                    0%
+                </div>
+
+            </div>
+
+
+            <div class="score-card">
+
+                <div>
+                    🏆 Overall
+                </div>
+
+                <div
+                    class="score-number"
+                    id="overall"
+                >
+                    0%
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="feedback">
+
+            <h3>
+                🤖 DebateMate Feedback
+            </h3>
+
+            <p id="feedback"></p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+
+    DebateMate AI • AI-powered debate preparation & practice
+
+</footer>
+
+</div>
+
+
+<script>
+
+/* =========================
+   SECTION PARSER
+========================= */
+
+function parseSection(text, title, nextTitles) {
+
+    const escapedTitle =
+        title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    let endPattern =
+        nextTitles
+            .map(t =>
+                t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            )
+            .join("|");
+
+    const regex = new RegExp(
+        escapedTitle +
+        "\\s*([\\s\\S]*?)(?=" +
+        endPattern +
+        "|$)",
+        "i"
+    );
+
+    const match = text.match(regex);
+
+    return match
+        ? match[1].trim()
+        : "";
+}
+
+
+/* =========================
+   LIST FORMATTER
+========================= */
+
+function listItems(text) {
+
+    if (!text) {
+        return [
+            "No information generated."
+        ];
+    }
+
+    return text
+        .split("\n")
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line =>
+            line
+                .replace(/^[-•*]\s*/, "")
+                .replace(/^\d+\.\s*/, "")
+        )
+        .filter(line => line.length > 0);
+}
+
+
+/* =========================
+   SHOW LIST
+========================= */
+
+function showList(elementId, items) {
+
+    const element =
+        document.getElementById(elementId);
+
+    element.innerHTML = "";
+
+    items.forEach(item => {
+
+        const li =
+            document.createElement("li");
+
+        li.textContent = item;
+
+        element.appendChild(li);
+
+    });
+}
+
+
+/* =========================
+   AI DEBATE GENERATOR
+========================= */
+
+async function generateDebate() {
+
+    const topic =
+        document.getElementById("topic")
+        .value
+        .trim();
+
+    const button =
+        document.getElementById("generateBtn");
+
+    const loading =
+        document.getElementById("loading");
+
+    const error =
+        document.getElementById("generateError");
+
+    const resultBox =
+        document.getElementById("generated");
+
+
+    error.style.display = "none";
+
+    resultBox.style.display = "none";
+
+
+    if (!topic) {
+
+        error.textContent =
+            "Please enter a debate topic first.";
+
+        error.style.display = "block";
+
+        return;
+    }
+
+
+    button.disabled = true;
+
+    loading.style.display = "block";
+
+
+    try {
+
+        const response =
+            await fetch("/api/generate", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    topic: topic
+                })
+
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            data.status !== "success"
+        ) {
+
+            throw new Error(
+                data.message ||
+                "Generation failed."
+            );
+
+        }
+
+
+        const text =
+            data.result;
+
+
+        const sections = [
+
+            "FOR ARGUMENTS:",
+
+            "AGAINST ARGUMENTS:",
+
+            "COUNTERARGUMENTS:",
+
+            "REBUTTALS:",
+
+            "KEY POINTS:",
+
+            "OPENING STATEMENT:",
+
+            "CLOSING STATEMENT:"
+
+        ];
+
+
+        const forText =
+            parseSection(
+                text,
+                "FOR ARGUMENTS:",
+                sections.slice(1)
+            );
+
+
+        const againstText =
+            parseSection(
+                text,
+                "AGAINST ARGUMENTS:",
+                sections.slice(2)
+            );
+
+
+        const counterText =
+            parseSection(
+                text,
+                "COUNTERARGUMENTS:",
+                sections.slice(3)
+            );
+
+
+        const rebuttalText =
+            parseSection(
+                text,
+                "REBUTTALS:",
+                sections.slice(4)
+            );
+
+
+        const keyText =
+            parseSection(
+                text,
+                "KEY POINTS:",
+                sections.slice(5)
+            );
+
+
+        const openingText =
+            parseSection(
+                text,
+                "OPENING STATEMENT:",
+                ["CLOSING STATEMENT:"]
+            );
+
+
+        const closingText =
+            parseSection(
+                text,
+                "CLOSING STATEMENT:",
+                ["🤖 DEBATE ENGINE"]
+            );
+
+
+        document.getElementById(
+            "displayTopic"
+        ).textContent = topic;
+
+
+        showList(
+            "forArguments",
+            listItems(forText)
+        );
+
+
+        showList(
+            "againstArguments",
+            listItems(againstText)
+        );
+
+
+        showList(
+            "counterArguments",
+            listItems(counterText)
+        );
+
+
+        showList(
+            "rebuttals",
+            listItems(rebuttalText)
+        );
+
+
+        showList(
+            "keyPoints",
+            listItems(keyText)
+        );
+
+
+        document.getElementById(
+            "opening"
+        ).textContent =
+            openingText ||
+            "Opening statement generated by DebateMate AI.";
+
+
+        document.getElementById(
+            "closing"
+        ).textContent =
+            closingText ||
+            "Closing statement generated by DebateMate AI.";
+
+
+        resultBox.style.display = "block";
+
+
+        resultBox.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+
+    } catch (err) {
+
+        error.textContent =
+            "Unable to generate the debate kit. Please check that the Flask server and Gemini API are working.";
+
+        error.style.display = "block";
+
+        console.error(err);
+
+    } finally {
+
+        button.disabled = false;
+
+        loading.style.display = "none";
+
+    }
+
+}
+
+
+/* =========================
+   ARGUMENT EVALUATION
+========================= */
+
+async function evaluateArgument() {
+
+    const topic =
+        document.getElementById(
+            "practiceTopic"
+        ).value.trim();
+
+
+    const argument =
+        document.getElementById(
+            "argument"
+        ).value.trim();
+
+
+    const error =
+        document.getElementById(
+            "evaluateError"
+        );
+
+
+    const result =
+        document.getElementById(
+            "evaluationResult"
+        );
+
+
+    error.style.display = "none";
+
+    result.style.display = "none";
+
+
+    if (!topic || !argument) {
+
+        error.textContent =
+            "Please enter both the debate topic and your argument.";
+
+        error.style.display = "block";
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch("/api/evaluate", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    topic: topic,
+
+                    argument: argument
+
+                })
+
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            data.status !== "success"
+        ) {
+
+            throw new Error(
+                data.message ||
+                "Evaluation failed."
+            );
+
+        }
+
+
+        const scores =
+            data.result.scores;
+
+
+        document.getElementById(
+            "relevance"
+        ).textContent =
+            scores.relevance + "%";
+
+
+        document.getElementById(
+            "clarity"
+        ).textContent =
+            scores.clarity + "%";
+
+
+        document.getElementById(
+            "reasoning"
+        ).textContent =
+            scores.reasoning + "%";
+
+
+        document.getElementById(
+            "overall"
+        ).textContent =
+            scores.overall + "%";
+
+
+        document.getElementById(
+            "feedback"
+        ).textContent =
+            data.result.feedback;
+
+
+        result.style.display = "block";
+
+
+    } catch (err) {
+
+        error.textContent =
+            "Unable to evaluate your argument. Please make sure the Flask server is running.";
+
+        error.style.display = "block";
+
+        console.error(err);
+
+    }
+
+}
+
+
+/* =========================
+   60-SECOND DEBATE TIMER
+========================= */
+
+let timerSeconds = 60;
+
+let timerInterval = null;
+
+
+function updateTimerDisplay() {
+
+    const minutes =
+        Math.floor(timerSeconds / 60);
+
+    const seconds =
+        timerSeconds % 60;
+
+
+    document.getElementById(
+        "timer"
+    ).textContent =
+
+        String(minutes).padStart(2, "0") +
+        ":" +
+        String(seconds).padStart(2, "0");
+
+}
+
+
+/* START TIMER */
+
+function startTimer() {
+
+    if (timerInterval !== null) {
+        return;
+    }
+
+
+    const startButton =
+        document.getElementById(
+            "startTimerBtn"
+        );
+
+
+    startButton.disabled = true;
+
+    startButton.textContent =
+        "⏳ Running...";
+
+
+    timerInterval =
+        setInterval(() => {
+
+            if (timerSeconds <= 0) {
+
+                clearInterval(
+                    timerInterval
+                );
+
+                timerInterval = null;
+
+
+                startButton.disabled =
+                    false;
+
+                startButton.textContent =
+                    "▶️ Start";
+
+
+                alert(
+                    "⏰ Time's up! Now evaluate your argument."
+                );
+
+
+                return;
+            }
+
+
+            timerSeconds--;
+
+            updateTimerDisplay();
+
+        }, 1000);
+
+}
+
+
+/* RESET TIMER */
+
+function resetTimer() {
+
+    clearInterval(
+        timerInterval
+    );
+
+
+    timerInterval = null;
+
+    timerSeconds = 60;
+
+
+    updateTimerDisplay();
+
+
+    const startButton =
+        document.getElementById(
+            "startTimerBtn"
+        );
+
+
+    startButton.disabled = false;
+
+    startButton.textContent =
+        "▶️ Start";
+
+}
+
+
+/* INITIAL TIMER DISPLAY */
+
+updateTimerDisplay();
+
+</script>
+
+</body>
+</html>
