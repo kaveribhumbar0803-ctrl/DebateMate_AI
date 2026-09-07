@@ -1,4 +1,4 @@
-Iimport os
+import os
 import json
 import urllib.request
 import urllib.error
@@ -13,26 +13,25 @@ def generate_debate(topic):
     prompt = f"""
 You are DebateMate AI, an expert debate coach.
 
-The user entered this debate topic:
+The user entered this exact debate topic:
 
 "{topic}"
 
-Generate a complete, topic-specific debate preparation kit.
+Analyze the exact topic carefully and create a topic-specific debate preparation kit.
 
 IMPORTANT RULES:
-- Analyze the exact topic before generating the answer.
+- Every point must directly relate to the exact topic.
 - Do NOT use generic or pre-written arguments.
-- Every point must directly relate to the given topic.
 - Give EXACTLY 5 different FOR arguments.
 - Give EXACTLY 5 different AGAINST arguments.
 - Give EXACTLY 5 different COUNTERARGUMENTS.
 - Give EXACTLY 5 different REBUTTALS.
 - Give EXACTLY 5 important KEY POINTS.
 - Do not repeat ideas.
-- Keep each point concise and student-friendly.
-- Make the arguments logical and useful for an actual debate.
-- Do not invent statistics, research papers, quotations, or sources.
-- If a fact is uncertain, do not present it as a fact.
+- Keep every point concise and student-friendly.
+- Make the arguments useful for an actual debate.
+- Do not invent statistics, studies, quotations, or sources.
+- Do not mention that you are an AI.
 
 Return ONLY this format:
 
@@ -115,21 +114,15 @@ CLOSING STATEMENT:
             data = json.loads(response.read().decode("utf-8"))
 
         if "candidates" not in data:
-            raise Exception(
-                "Gemini did not return a valid response."
-            )
+            raise Exception("Gemini did not return a valid response.")
 
         return data["candidates"][0]["content"]["parts"][0]["text"]
 
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8", errors="ignore")
         print("Gemini HTTP Error:", error_body)
-        raise Exception(
-            f"Gemini API error ({e.code}). Please try again."
-        )
+        raise Exception(f"Gemini API error ({e.code}). Please try again.")
 
     except Exception as e:
         print("Gemini API Error:", e)
-        raise Exception(
-            "Unable to generate the debate kit. Please try again."
-        )
+        raise Exception("Unable to generate the debate kit. Please try again.")
