@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder="../frontend", static_url_path="")
 
 @app.route("/")
 def home():
-    return send_from_directory("../Frontend", "index.html")
+    return send_from_directory("../frontend", "index.html")
 
 
 @app.route("/api/health", methods=["GET"])
