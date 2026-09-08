@@ -1,67 +1,66 @@
 import os
-import json
-import time
-import urllib.request
-import urllib.error
-
-
-MODEL = "gemini-3.7-flash"
-
-API_URL = (
-    "https://generativelanguage.googleapis.com/"
-    "v1beta/models/" + MODEL + ":generateContent"
-)
+from google import genai
+from google.genai import types
 
 
 def generate_debate(topic):
-    api_key = os.getenv("GEMINI_API_KEY")
-
-    if not api_key:
-        raise Exception("GEMINI_API_KEY is not configured on the server.")
-
     topic = topic.strip()
 
     if not topic:
-        raise Exception("Debate topic cannot be empty.")
+        raise Exception("Please enter a debate topic.")
 
-    prompt = """
-You are DebateMate AI, an expert debate coach.
+    api_key = os.getenv("GEMINI_API_KEY")
 
-The exact debate topic is:
+    if not api_key:
+        raise Exception("GEMINI_API_KEY is missing on the server.")
 
-""" + topic + """
+    client = genai.Client(api_key=api_key)
 
-Create a complete debate preparation kit specifically for this topic.
+    prompt = f"""
+You are DebateMate AI, an expert college debate coach.
 
-IMPORTANT RULES:
+EXACT DEBATE TOPIC:
+{topic}
 
-1. Give exactly 5 FOR arguments.
-2. Give exactly 5 AGAINST arguments.
-3. Give exactly 5 COUNTERARGUMENTS.
-4. Give exactly 5 REBUTTALS.
-5. Give exactly 5 KEY POINTS.
-6. Write a topic-specific OPENING STATEMENT.
-7. Write a topic-specific CLOSING STATEMENT.
+Create a complete debate preparation sheet specifically for this exact topic.
 
-Every point must be directly related to the exact topic.
+IMPORTANT:
+Every section must be directly related to the exact topic.
 
-Do NOT use generic arguments.
-Do NOT repeat the same idea.
-Do NOT repeat an argument using different words.
+FOR ARGUMENTS:
+Give exactly 5 different arguments supporting the topic.
+Each argument must focus on a different relevant aspect.
 
-COUNTERARGUMENTS must respond directly to the FOR arguments.
+AGAINST ARGUMENTS:
+Give exactly 5 different arguments opposing the topic.
+Each argument must focus on a different relevant concern.
 
-REBUTTALS must respond directly to the COUNTERARGUMENTS.
+COUNTERARGUMENTS:
+Give exactly 5 different counterarguments.
+Each counterargument must directly challenge one of the strongest FOR arguments.
+Do not simply repeat the AGAINST arguments.
 
-KEY POINTS must summarize the most important ideas about this exact topic.
+REBUTTALS:
+Give exactly 5 different rebuttals.
+Each rebuttal must directly answer a counterargument.
+Do not repeat the FOR arguments.
 
-The OPENING STATEMENT must clearly introduce this exact topic.
+KEY POINTS:
+Give exactly 5 short and memorable points specifically about this topic.
 
-The CLOSING STATEMENT must clearly conclude this exact topic.
+OPENING STATEMENT:
+Write a strong 3-4 sentence opening statement specifically about this topic.
 
-Do not invent statistics, studies, quotations, or sources.
+CLOSING STATEMENT:
+Write a strong 3-4 sentence closing statement specifically about this topic.
 
-Use simple, clear language suitable for a college student.
+STRICT RULES:
+- Do not use generic or pre-written content.
+- Do not repeat ideas.
+- Do not repeat the same statement with different wording.
+- Do not invent statistics, studies, quotations, or sources.
+- Keep the language simple and suitable for college students.
+- Make the content useful for an actual debate.
 
 Return ONLY this format:
 
@@ -107,119 +106,23 @@ CLOSING STATEMENT:
 ...
 """
 
-    payload = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt
-                    }
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.8,
-            "maxOutputTokens": 1400
-        }
-    }
-
-    request_data = json.dumps(payload).encode("utf-8")
-
-    for attempt in range(2):
-        try:
-            request = urllib.request.Request(
-                API_URL,
-                data=request_data,
-                headers={
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": api_key
-                },
-                method="POST"
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.7-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                max_output_tokens=1400
             )
+        )
 
-            with urllib.request.urlopen(
-                request,
-                timeout=60
-            ) as response:
+        if not response.text:
+            raise Exception("Gemini returned an empty response.")
 
-                response_text = response.read().decode("utf-8")
+        return response.text.strip()
 
-            data = json.loads(response_text)
-
-            if "error" in data:
-                message = data["error"].get(
-                    "message",
-                    "Unknown Gemini API error."
-                )
-
-                print("Gemini API Error:", message)
-
-                raise Exception(message)
-
-            candidates = data.get("candidates", [])
-
-            if not candidates:
-                raise Exception(
-                    "Gemini returned no candidates."
-                )
-
-            content = candidates[0].get("content", {})
-            parts = content.get("parts", [])
-
-            if not parts:
-                raise Exception(
-                    "Gemini returned no text."
-                )
-
-            result = parts[0].get("text", "").strip()
-
-            if not result:
-                raise Exception(
-                    "Gemini returned an empty response."
-                )
-
-            return result
-
-        except urllib.error.HTTPError as error:
-            error_body = error.read().decode(
-                "utf-8",
-                errors="ignore"
-            )
-
-            print("Gemini HTTP Error:", error.code)
-            print("Gemini Response:", error_body)
-
-            if error.code in (429, 500, 502, 503, 504):
-                if attempt == 0:
-                    time.sleep(2)
-                    continue
-
-            raise Exception(
-                "Gemini API error: HTTP "
-                + str(error.code)
-            )
-
-        except urllib.error.URLError as error:
-            print("Gemini connection error:", error)
-
-            if attempt == 0:
-                time.sleep(2)
-                continue
-
-            raise Exception(
-                "Unable to connect to Gemini API."
-            )
-
-        except Exception as error:
-            print("Gemini error:", error)
-
-            if attempt == 0:
-                time.sleep(2)
-                continue
-
-            raise Exception(str(error))
-
-    raise Exception(
-        "Unable to generate the debate kit."
-    )
+    except Exception as error:
+        print("Gemini generation error:", repr(error))
+        raise Exception(
+            "Gemini generation failed. Check the Render logs for the exact API error."
+        )
 
