@@ -237,8 +237,6 @@ button:disabled {
     gap: 20px;
 }
 
-/* TIMER */
-
 .timer-box {
     margin: 5px 0 20px;
     padding: 20px;
@@ -274,8 +272,6 @@ button:disabled {
 .reset-btn {
     background: rgba(255,255,255,0.1);
 }
-
-/* SCORES */
 
 .score-grid {
     display: grid;
@@ -673,13 +669,8 @@ footer {
 <script>
 
 /* =========================================================
-   SECTION PARSER
-   Handles:
-   FOR ARGUMENTS:
-   **FOR ARGUMENTS:**
-   FOR ARGUMENTS :
-   **FOR ARGUMENTS :**
-========================================================= */
+   ROBUST SECTION PARSER
+   ========================================================= */
 
 function parseSection(text, title, nextTitles) {
 
@@ -688,52 +679,84 @@ function parseSection(text, title, nextTitles) {
     }
 
     const cleanTitle = title
+        .replace(/\*\*/g, "")
         .replace(/:/g, "")
         .trim();
 
     const escapedTitle =
         cleanTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-    const titlePattern =
-        "\\*{0,2}\\s*" +
+    const nextPatterns = nextTitles.map(function(nextTitle) {
+
+        const cleanNext = nextTitle
+            .replace(/\*\*/g, "")
+            .replace(/:/g, "")
+            .trim();
+
+        const escapedNext =
+            cleanNext.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+        return (
+            "^\\s*\\**\\s*" +
+            escapedNext +
+            "\\s*:?\\s*\\**\\s*$"
+        );
+
+    });
+
+    const lines = text.split(/\r?\n/);
+
+    let startIndex = -1;
+    let endIndex = lines.length;
+
+    const titleRegex = new RegExp(
+        "^\\s*\\**\\s*" +
         escapedTitle +
-        "\\s*:\\s*\\*{0,2}";
-
-    const nextPattern = nextTitles
-        .map(function(nextTitle) {
-
-            const cleanNext = nextTitle
-                .replace(/:/g, "")
-                .trim();
-
-            const escapedNext =
-                cleanNext.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-            return (
-                "\\*{0,2}\\s*" +
-                escapedNext +
-                "\\s*:\\s*\\*{0,2}"
-            );
-
-        })
-        .join("|");
-
-    const regex = new RegExp(
-        titlePattern +
-        "\\s*([\\s\\S]*?)" +
-        "(?=" +
-        nextPattern +
-        "|$)",
+        "\\s*:?\\s*\\**\\s*$",
         "i"
     );
 
-    const match = text.match(regex);
+    for (let i = 0; i < lines.length; i++) {
 
-    if (!match) {
+        if (titleRegex.test(lines[i])) {
+
+            startIndex = i + 1;
+            break;
+
+        }
+
+    }
+
+    if (startIndex === -1) {
         return "";
     }
 
-    return match[1]
+    if (nextPatterns.length > 0) {
+
+        for (let i = startIndex; i < lines.length; i++) {
+
+            const isNextHeading =
+                nextPatterns.some(function(pattern) {
+
+                    return new RegExp(pattern, "i")
+                        .test(lines[i]);
+
+                });
+
+            if (isNextHeading) {
+
+                endIndex = i;
+                break;
+
+            }
+
+        }
+
+    }
+
+    return lines
+        .slice(startIndex, endIndex)
+        .join("\n")
         .replace(/\*\*/g, "")
         .trim();
 }
@@ -741,7 +764,7 @@ function parseSection(text, title, nextTitles) {
 
 /* =========================================================
    LIST FORMATTER
-========================================================= */
+   ========================================================= */
 
 function listItems(text) {
 
@@ -788,7 +811,7 @@ function listItems(text) {
 
 /* =========================================================
    SHOW LIST
-========================================================= */
+   ========================================================= */
 
 function showList(elementId, items) {
 
@@ -813,7 +836,7 @@ function showList(elementId, items) {
 
 /* =========================================================
    AI DEBATE GENERATOR
-========================================================= */
+   ========================================================= */
 
 async function generateDebate() {
 
@@ -834,11 +857,8 @@ async function generateDebate() {
     const resultBox =
         document.getElementById("generated");
 
-
     error.style.display = "none";
-
     resultBox.style.display = "none";
-
 
     if (!topic) {
 
@@ -851,11 +871,8 @@ async function generateDebate() {
 
     }
 
-
     button.disabled = true;
-
     loading.style.display = "block";
-
 
     try {
 
@@ -915,19 +932,19 @@ async function generateDebate() {
 
         const sections = [
 
-            "FOR ARGUMENTS:",
+            "FOR ARGUMENTS",
 
-            "AGAINST ARGUMENTS:",
+            "AGAINST ARGUMENTS",
 
-            "COUNTERARGUMENTS:",
+            "COUNTERARGUMENTS",
 
-            "REBUTTALS:",
+            "REBUTTALS",
 
-            "KEY POINTS:",
+            "KEY POINTS",
 
-            "OPENING STATEMENT:",
+            "OPENING STATEMENT",
 
-            "CLOSING STATEMENT:"
+            "CLOSING STATEMENT"
 
         ];
 
@@ -935,7 +952,7 @@ async function generateDebate() {
         const forText =
             parseSection(
                 text,
-                "FOR ARGUMENTS:",
+                "FOR ARGUMENTS",
                 sections.slice(1)
             );
 
@@ -943,7 +960,7 @@ async function generateDebate() {
         const againstText =
             parseSection(
                 text,
-                "AGAINST ARGUMENTS:",
+                "AGAINST ARGUMENTS",
                 sections.slice(2)
             );
 
@@ -951,7 +968,7 @@ async function generateDebate() {
         const counterText =
             parseSection(
                 text,
-                "COUNTERARGUMENTS:",
+                "COUNTERARGUMENTS",
                 sections.slice(3)
             );
 
@@ -959,7 +976,7 @@ async function generateDebate() {
         const rebuttalText =
             parseSection(
                 text,
-                "REBUTTALS:",
+                "REBUTTALS",
                 sections.slice(4)
             );
 
@@ -967,7 +984,7 @@ async function generateDebate() {
         const keyText =
             parseSection(
                 text,
-                "KEY POINTS:",
+                "KEY POINTS",
                 sections.slice(5)
             );
 
@@ -975,15 +992,15 @@ async function generateDebate() {
         const openingText =
             parseSection(
                 text,
-                "OPENING STATEMENT:",
-                ["CLOSING STATEMENT:"]
+                "OPENING STATEMENT",
+                ["CLOSING STATEMENT"]
             );
 
 
         const closingText =
             parseSection(
                 text,
-                "CLOSING STATEMENT:",
+                "CLOSING STATEMENT",
                 []
             );
 
@@ -1072,7 +1089,7 @@ async function generateDebate() {
 
 /* =========================================================
    ARGUMENT EVALUATION
-========================================================= */
+   ========================================================= */
 
 async function evaluateArgument() {
 
@@ -1101,7 +1118,6 @@ async function evaluateArgument() {
 
 
     error.style.display = "none";
-
     result.style.display = "none";
 
 
@@ -1210,7 +1226,7 @@ async function evaluateArgument() {
 
 /* =========================================================
    60-SECOND DEBATE TIMER
-========================================================= */
+   ========================================================= */
 
 let timerSeconds = 60;
 
@@ -1242,9 +1258,7 @@ function updateTimerDisplay() {
 function startTimer() {
 
     if (timerInterval !== null) {
-
         return;
-
     }
 
 
