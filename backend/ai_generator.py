@@ -6,9 +6,10 @@ import urllib.error
 
 
 MODEL = "gemini-3.7-flash"
+
 API_URL = (
-    f"https://generativelanguage.googleapis.com/"
-    f"v1beta/models/{MODEL}:generateContent"
+    "https://generativelanguage.googleapis.com/"
+    "v1beta/models/" + MODEL + ":generateContent"
 )
 
 
@@ -23,62 +24,44 @@ def generate_debate(topic):
     if not topic:
         raise Exception("Debate topic cannot be empty.")
 
-    prompt = f"""
-You are DebateMate AI, a professional debate coach.
+    prompt = """
+You are DebateMate AI, an expert debate coach.
 
-DEBATE TOPIC:
-"{topic}"
+The exact debate topic is:
 
-Create a complete and highly specific debate preparation sheet for THIS EXACT TOPIC.
+""" + topic + """
 
-IMPORTANT:
-Every section must be based specifically on the topic above.
-Do not use generic arguments.
-Do not repeat the same idea in different wording.
+Create a complete debate preparation kit specifically for this topic.
 
-Generate:
+IMPORTANT RULES:
 
-FOR ARGUMENTS:
-Exactly 5 different arguments supporting the topic.
-Each argument must focus on a different aspect such as benefits, practicality,
-society, education, economy, technology, ethics, safety, or future impact,
-whichever are actually relevant to the topic.
+1. Give exactly 5 FOR arguments.
+2. Give exactly 5 AGAINST arguments.
+3. Give exactly 5 COUNTERARGUMENTS.
+4. Give exactly 5 REBUTTALS.
+5. Give exactly 5 KEY POINTS.
+6. Write a topic-specific OPENING STATEMENT.
+7. Write a topic-specific CLOSING STATEMENT.
 
-AGAINST ARGUMENTS:
-Exactly 5 different arguments opposing the topic.
-Each must focus on a different relevant concern or disadvantage.
+Every point must be directly related to the exact topic.
 
-COUNTERARGUMENTS:
-Exactly 5 responses to the strongest FOR arguments.
-Each counterargument must directly challenge a specific FOR argument.
-Do not simply repeat the AGAINST section.
+Do NOT use generic arguments.
+Do NOT repeat the same idea.
+Do NOT repeat an argument using different words.
 
-REBUTTALS:
-Exactly 5 responses defending the FOR side against the counterarguments.
-Each rebuttal must answer a different counterargument.
-Make them logical and convincing.
+COUNTERARGUMENTS must respond directly to the FOR arguments.
 
-KEY POINTS:
-Exactly 5 short, memorable points that summarize the most important ideas
-of THIS topic for a student preparing for a debate.
+REBUTTALS must respond directly to the COUNTERARGUMENTS.
 
-OPENING STATEMENT:
-Write a strong 3-4 sentence opening statement specifically about this topic.
-It should introduce the issue and clearly establish the debate position.
+KEY POINTS must summarize the most important ideas about this exact topic.
 
-CLOSING STATEMENT:
-Write a strong 3-4 sentence closing statement specifically about this topic.
-It should summarize the main reasoning and end with a convincing conclusion.
+The OPENING STATEMENT must clearly introduce this exact topic.
 
-STRICT RULES:
-- Never use generic filler.
-- Never repeat the same argument.
-- Counterarguments must directly answer FOR arguments.
-- Rebuttals must directly answer counterarguments.
-- Opening and closing statements must mention the actual topic.
-- Do not invent statistics, studies, quotations, or sources.
-- Keep the language student-friendly.
-- Make the content useful for an actual college debate.
+The CLOSING STATEMENT must clearly conclude this exact topic.
+
+Do not invent statistics, studies, quotations, or sources.
+
+Use simple, clear language suitable for a college student.
 
 Return ONLY this format:
 
@@ -127,7 +110,6 @@ CLOSING STATEMENT:
     payload = {
         "contents": [
             {
-                "role": "user",
                 "parts": [
                     {
                         "text": prompt
@@ -137,14 +119,11 @@ CLOSING STATEMENT:
         ],
         "generationConfig": {
             "temperature": 0.8,
-            "maxOutputTokens": 1400,
-            "candidateCount": 1
+            "maxOutputTokens": 1400
         }
     }
 
     request_data = json.dumps(payload).encode("utf-8")
-
-    last_error = None
 
     for attempt in range(2):
         try:
@@ -158,84 +137,89 @@ CLOSING STATEMENT:
                 method="POST"
             )
 
-            with urllib.request.urlopen(request, timeout=60) as response:
-                raw_response = response.read().decode("utf-8")
+            with urllib.request.urlopen(
+                request,
+                timeout=60
+            ) as response:
 
-            data = json.loads(raw_response)
+                response_text = response.read().decode("utf-8")
+
+            data = json.loads(response_text)
 
             if "error" in data:
-                error_message = data["error"].get(
+                message = data["error"].get(
                     "message",
                     "Unknown Gemini API error."
                 )
-                print("Gemini API Error:", error_message)
-                raise Exception(error_message)
 
-            candidates = data.get("candidates")
+                print("Gemini API Error:", message)
+
+                raise Exception(message)
+
+            candidates = data.get("candidates", [])
 
             if not candidates:
-                raise Exception("Gemini returned no candidates.")
+                raise Exception(
+                    "Gemini returned no candidates."
+                )
 
             content = candidates[0].get("content", {})
             parts = content.get("parts", [])
 
             if not parts:
-                raise Exception("Gemini returned no text.")
+                raise Exception(
+                    "Gemini returned no text."
+                )
 
-            text = parts[0].get("text", "").strip()
+            result = parts[0].get("text", "").strip()
 
-            if not text:
-                raise Exception("Gemini returned an empty response.")
+            if not result:
+                raise Exception(
+                    "Gemini returned an empty response."
+                )
 
-            return text
+            return result
 
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode("utf-8", errors="ignore")
-            print("Gemini HTTP Error:", e.code)
+        except urllib.error.HTTPError as error:
+            error_body = error.read().decode(
+                "utf-8",
+                errors="ignore"
+            )
+
+            print("Gemini HTTP Error:", error.code)
             print("Gemini Response:", error_body)
 
-            last_error = f"Gemini API HTTP {e.code}"
+            if error.code in (429, 500, 502, 503, 504):
+                if attempt == 0:
+                    time.sleep(2)
+                    continue
 
-            # Retry temporary server/rate-limit errors.
-            if e.code in (429, 500, 502, 503, 504) and attempt == 0:
+            raise Exception(
+                "Gemini API error: HTTP "
+                + str(error.code)
+            )
+
+        except urllib.error.URLError as error:
+            print("Gemini connection error:", error)
+
+            if attempt == 0:
                 time.sleep(2)
                 continue
 
             raise Exception(
-                f"Gemini API error ({e.code}). Please try again."
+                "Unable to connect to Gemini API."
             )
 
-        except urllib.error.URLError as e:
-            print("Gemini Connection Error:", e)
-
-            last_error = "Unable to connect to Gemini API."
+        except Exception as error:
+            print("Gemini error:", error)
 
             if attempt == 0:
                 time.sleep(2)
                 continue
 
-            raise Exception(last_error)
+            raise Exception(str(error))
 
-        except Exception as e:
-            print("Gemini Error:", e)
-            last_error = str(e)
+    raise Exception(
+        "Unable to generate the debate kit."
+    )
 
-            if attempt == 0:
-                time.sleep(2)
-                continue
-
-            raise Exception(last_error)
-
-    raise Exception(last_error or "Unable to generate the debate kit.")
-
-Why this should stop the problem
-
-Your previous code was asking Gemini for a very large response containing 30+ separate pieces of content. Now the request is more controlled, and temporary "429/500/502/503/504" failures are retried once.
-
-Also, your API authentication method is correct according to Google's current documentation.
-
-Important: Don't change "app.py", "evaluator.py", frontend files, Render settings, or your API key for this fix.
-
-Just replace "backend/ai_generator.py" with the code above. Then save it.
-
-Stop there. Tell me Done, and I'll give you only the next step.
