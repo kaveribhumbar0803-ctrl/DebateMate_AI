@@ -13,25 +13,61 @@ def generate_debate(topic):
     prompt = f"""
 You are DebateMate AI, an expert debate coach.
 
-The user entered this exact debate topic:
-
+DEBATE TOPIC:
 "{topic}"
 
-Analyze the exact topic carefully and create a topic-specific debate preparation kit.
+Your task is to deeply analyze this EXACT topic and create a high-quality,
+topic-specific debate preparation kit.
 
-IMPORTANT RULES:
-- Every point must directly relate to the exact topic.
-- Do NOT use generic or pre-written arguments.
-- Give EXACTLY 5 different FOR arguments.
-- Give EXACTLY 5 different AGAINST arguments.
-- Give EXACTLY 5 different COUNTERARGUMENTS.
-- Give EXACTLY 5 different REBUTTALS.
-- Give EXACTLY 5 important KEY POINTS.
+IMPORTANT:
+Every argument MUST be specifically about the given topic.
+Do not use generic statements that could apply to any debate topic.
+
+DIVERSITY RULE:
+Each point must introduce a DIFFERENT IDEA or DIMENSION.
+Do NOT rewrite the same argument using different words.
+
+For example, if one point discusses cost, another point must NOT simply
+say that the topic is economically beneficial in different words.
+Use different aspects such as education, society, ethics, technology,
+employment, privacy, safety, accessibility, human impact, implementation,
+long-term effects, etc., ONLY when relevant to the actual topic.
+
+REQUIREMENTS:
+
+1. FOR ARGUMENTS
+Give EXACTLY 5 strong arguments supporting the topic.
+Each must use a different relevant aspect of the topic.
+
+2. AGAINST ARGUMENTS
+Give EXACTLY 5 strong arguments opposing the topic.
+Each must use a different relevant aspect of the topic.
+
+3. COUNTERARGUMENTS
+Give EXACTLY 5 responses that directly challenge the strongest AGAINST
+arguments.
+Each counterargument must address a different concern.
+
+4. REBUTTALS
+Give EXACTLY 5 responses defending the AGAINST side against the FOR side.
+Each rebuttal must address a different argument.
+
+5. KEY POINTS
+Give EXACTLY 5 memorable debate points.
+Each must highlight a different important aspect of the topic.
+
+QUALITY RULES:
+- Analyze the exact wording and meaning of the topic first.
+- Do not use generic or pre-written arguments.
 - Do not repeat ideas.
-- Keep every point clear, practical and student-friendly.
-- Make arguments useful for an actual debate.
-- Do not invent statistics, studies, quotations or sources.
+- Do not make one sentence appear in multiple sections.
+- Do not invent statistics, studies, quotations, or sources.
+- If a specific fact is uncertain, avoid presenting it as fact.
+- Keep arguments concise but meaningful.
+- Make the content useful for an actual student debate.
+- Use clear, student-friendly language.
 - Do not mention that you are an AI.
+- Do not add explanations outside the requested structure.
 
 Return ONLY this structure:
 
@@ -93,8 +129,8 @@ CLOSING STATEMENT:
             }
         ],
         "generationConfig": {
-            "temperature": 0.7,
-            "maxOutputTokens": 1200,
+            "temperature": 0.8,
+            "maxOutputTokens": 1600,
             "candidateCount": 1
         }
     }
@@ -121,8 +157,12 @@ CLOSING STATEMENT:
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8", errors="ignore")
         print("Gemini HTTP Error:", error_body)
-        raise Exception(f"Gemini API error ({e.code}). Please try again.")
+        raise Exception(
+            f"Gemini API error ({e.code}). Please try again."
+        )
 
     except Exception as e:
         print("Gemini API Error:", e)
-        raise Exception("Unable to generate the debate kit. Please try again.")
+        raise Exception(
+            "Unable to generate the debate kit. Please try again."
+        )
