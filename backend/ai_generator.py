@@ -19,80 +19,82 @@ def generate_debate(topic):
     client = genai.Client(api_key=api_key)
 
     prompt = f"""
-You are DebateMate AI, an expert college debate coach.
+You are DebateMate AI, a college debate coach.
 
-EXACT DEBATE TOPIC:
+TOPIC:
 {topic}
 
-Create a complete debate preparation kit specifically for this topic.
+Create a debate preparation kit specifically for this topic.
+
+Give EXACTLY:
 
 FOR ARGUMENTS:
-Give exactly 5 different arguments supporting the topic.
+5 different supporting arguments.
 
 AGAINST ARGUMENTS:
-Give exactly 5 different arguments opposing the topic.
+5 different opposing arguments.
 
 COUNTERARGUMENTS:
-Give exactly 5 counterarguments that directly challenge the strongest FOR arguments.
-Do not simply repeat the AGAINST arguments.
+5 responses challenging the strongest FOR arguments.
+Do not copy the AGAINST arguments.
 
 REBUTTALS:
-Give exactly 5 rebuttals that directly answer the counterarguments.
-Do not repeat the FOR arguments.
+5 responses to the counterarguments.
+Do not copy the FOR arguments.
 
 KEY POINTS:
-Give exactly 5 short and memorable points about this topic.
+5 short important points.
 
 OPENING STATEMENT:
-Write a strong 3-4 sentence opening statement specifically about this topic.
+3 sentences.
 
 CLOSING STATEMENT:
-Write a strong 3-4 sentence closing statement specifically about this topic.
+3 sentences.
 
 RULES:
-- Every section must be specific to the exact topic.
+- Everything must be specifically related to the topic.
+- Keep language simple for college students.
 - Do not repeat ideas.
-- Do not use generic pre-written content.
-- Do not invent statistics, studies, quotations, or sources.
-- Keep language simple and suitable for college students.
-- Make the arguments balanced and useful for an actual debate.
+- Do not invent statistics or sources.
+- Be balanced.
+- Return ONLY the requested sections.
 
-Return ONLY this format:
+FORMAT:
 
 FOR ARGUMENTS:
-1. ...
-2. ...
-3. ...
-4. ...
-5. ...
+1.
+2.
+3.
+4.
+5.
 
 AGAINST ARGUMENTS:
-1. ...
-2. ...
-3. ...
-4. ...
-5. ...
+1.
+2.
+3.
+4.
+5.
 
 COUNTERARGUMENTS:
-1. ...
-2. ...
-3. ...
-4. ...
-5. ...
+1.
+2.
+3.
+4.
+5.
 
 REBUTTALS:
-1. ...
-2. ...
-3. ...
-4. ...
-5. ...
+1.
+2.
+3.
+4.
+5.
 
 KEY POINTS:
-- ...
-- ...
-- ...
-- ...
-- ...
+- 
+- 
+- 
+- 
+- 
 
 OPENING STATEMENT:
 ...
@@ -101,31 +103,34 @@ CLOSING STATEMENT:
 ...
 """
 
-    # Try reliable Flash models.
+    # Current stable models.
     models = [
-        "gemini-3.6-flash",
-        "gemini-3.5-flash"
+        "gemini-3.8-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash-lite"
     ]
 
     last_error = None
 
     for model in models:
-        for attempt in range(3):
+        for attempt in range(2):
             try:
                 print(
-                    f"Gemini request: model={model}, attempt={attempt + 1}"
+                    f"Trying Gemini model: {model}, "
+                    f"attempt: {attempt + 1}"
                 )
 
                 response = client.models.generate_content(
                     model=model,
                     contents=prompt,
                     config=types.GenerateContentConfig(
-                        max_output_tokens=1400
+                        temperature=0.7,
+                        max_output_tokens=1200
                     )
                 )
 
-                if response and response.text:
-                    print(f"Gemini success: model={model}")
+                if response is not None and response.text:
+                    print(f"Gemini success: {model}")
                     return response.text.strip()
 
                 raise Exception("Gemini returned an empty response.")
@@ -134,16 +139,18 @@ CLOSING STATEMENT:
                 last_error = error
 
                 print(
-                    f"Gemini error: model={model}, "
-                    f"attempt={attempt + 1}, error={repr(error)}"
+                    f"Gemini failed: {model}, "
+                    f"attempt: {attempt + 1}, "
+                    f"error: {repr(error)}"
                 )
 
-                # Wait longer after each temporary failure.
-                if attempt < 2:
-                    wait_time = 2 ** attempt
-                    time.sleep(wait_time)
+                if attempt == 0:
+                    time.sleep(3)
+
+    print("All Gemini models failed.")
+    print("Last Gemini error:", repr(last_error))
 
     raise Exception(
         "Gemini is temporarily unavailable. "
-        "Please try Generate Debate again."
+        "Please try again in a few seconds."
     )
