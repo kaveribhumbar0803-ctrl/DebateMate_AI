@@ -19,37 +19,21 @@ The user entered this exact debate topic:
 
 Analyze the exact topic carefully and create a topic-specific debate preparation kit.
 
-<<<<<<< HEAD
 IMPORTANT RULES:
 - Every point must directly relate to the exact topic.
 - Do NOT use generic or pre-written arguments.
-=======
-IMPORTANT:
-- Do NOT use generic or pre-written arguments.
-- Every argument must directly relate to the exact topic.
->>>>>>> 2fe2aaf (Fix topic-specific Gemini generation)
 - Give EXACTLY 5 different FOR arguments.
 - Give EXACTLY 5 different AGAINST arguments.
 - Give EXACTLY 5 different COUNTERARGUMENTS.
 - Give EXACTLY 5 different REBUTTALS.
 - Give EXACTLY 5 important KEY POINTS.
-<<<<<<< HEAD
 - Do not repeat ideas.
-- Keep every point concise and student-friendly.
-- Make the arguments useful for an actual debate.
-- Do not invent statistics, studies, quotations, or sources.
-- Do not mention that you are an AI.
-
-Return ONLY this format:
-=======
-- Do not repeat the same idea.
 - Keep every point clear, practical and student-friendly.
 - Make arguments useful for an actual debate.
 - Do not invent statistics, studies, quotations or sources.
 - Do not mention that you are an AI.
 
 Return ONLY this structure:
->>>>>>> 2fe2aaf (Fix topic-specific Gemini generation)
 
 FOR ARGUMENTS:
 1. ...
@@ -137,20 +121,8 @@ CLOSING STATEMENT:
     except urllib.error.HTTPError as e:
         error_body = e.read().decode("utf-8", errors="ignore")
         print("Gemini HTTP Error:", error_body)
-<<<<<<< HEAD
         raise Exception(f"Gemini API error ({e.code}). Please try again.")
 
     except Exception as e:
         print("Gemini API Error:", e)
         raise Exception("Unable to generate the debate kit. Please try again.")
-=======
-        raise Exception(
-            f"Gemini API error ({e.code}). Please try again."
-        )
-
-    except Exception as e:
-        print("Gemini API Error:", e)
-        raise Exception(
-            "Unable to generate the debate kit. Please try again."
-        )
->>>>>>> 2fe2aaf (Fix topic-specific Gemini generation)
